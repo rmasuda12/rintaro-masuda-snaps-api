@@ -13,8 +13,8 @@ route.get("/", (req, res) => {
         const photosData = JSON.parse(dataBuffer);
         res.send(photosData);        
     } catch (error) {
-        res.status(500).send("error: could not grab photo info");
-    }
+        res.send("Error: could not grab photo info");
+    };
 
 })
 
@@ -22,24 +22,42 @@ route.get("/:id", (req, res) => {
     try {
         const dataBuffer = fs.readFileSync("./data/photos.json");
         const photosData = JSON.parse(dataBuffer);
-        res.send(photosData.find((photo)=>photo.id === req.params.id))
+        const photo = photosData.find((photo)=>photo.id === req.params.id);
+        console.log(photo)
+        if (!photo) {
+            res.status(404).send("Error: photo with specified id does not exist");
+        }
+
+        res.send(photo);
+
     } catch (error) {
-        res.send("erro: could not grab photo with specified id")
+        console.log(error)
+        res.send(error)
     }
 })
 
 route.get("/:id/comments", (req, res)=>{
     try {
         const dataBuffer = fs.readFileSync("./data/photos.json");
-        const photoData = JSON.parse(dataBuffer);
-        res.send(photosData.find((photo)=> photo.id===req.params.id).comments);
+        const photosData = JSON.parse(dataBuffer);
+        const photo = photosData.find((photo)=> photo.id===req.params.id);
+        if (!photo) {
+            res.status(404).send("Error: photo with specified id does not exist");
+        }
+
+        res.send(photo.comments);
+
     } catch (error) {
-        res.send(error);
+        res.send(error)
     }
 })
 
 route.post("/:id/comments", (req, res)=> {
 
+    if (!req.body.name || !req.body.comment) {
+        res.status(400).send("Error: name and/or comment in the body is empty. Please try again")
+    }
+    
     const newComment = {
         name: req.body.name,
         comment: req.body.comment,
@@ -51,16 +69,20 @@ route.post("/:id/comments", (req, res)=> {
         //get comments
         const dataBuffer = fs.readFileSync("./data/photos.json");
         const photosData = JSON.parse(dataBuffer);
-        console.log("Before adding",photosData.find((photo)=> photo.id === req.params.id))
-        // find object with id and go to comment
+        const photo = photosData.find((photo) => photo.id === req.params.id);
+
+        if (!photo) {
+            res.status(404).send("Error: photo with specified id does not exist");
+        }
+
         photosData.forEach(element => {
             if (element.id === req.params.id) {
                 element.comments.push(newComment);
                 res.send(element.comments);
             }
         });
+
         fs.writeFileSync("./data/photos.json", JSON.stringify(photosData));
-        console.log("After Adding",photosData.find((photo)=> photo.id === req.params.id))
 
     } catch (error) {
         res.send(error);
