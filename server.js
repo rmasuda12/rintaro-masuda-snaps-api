@@ -10,6 +10,7 @@ const BACKEND_URL = process.env.BACKEND_URL;
 //middleware 
 app.use(cors()); //address cors error
 app.use(express.json()); //add body to req
+app.use(express.static("public")); //make files in public folder accessible
 
 //routes
 app.use("/photos", photosRoute);
